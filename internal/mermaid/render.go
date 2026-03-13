@@ -32,7 +32,7 @@ func RenderSequenceDiagram(pkg *load.PackageInfo, writer io.Writer) error {
 	sb.WriteString("sequenceDiagram\n")
 
 	for _, p := range sequenceDiagram.participants {
-		sb.WriteString(fmt.Sprintf("    participant %s\n", p))
+		fmt.Fprintf(&sb, "    participant %s\n", p)
 	}
 	sb.WriteString("\n")
 

@@ -11,13 +11,12 @@ import (
 )
 
 const (
-	stateMachineType         = "StateMachine"
-	sendToFunction           = "SendTo"
-	protobufSendToFunction   = "ProtobufSendTo"
-	onEntryHandler           = "OnEntry"
-	onEventHandler           = "OnEvent"
-	onExitHandler            = "OnExit"
-	onProtobufMessageHandler = "OnProtobufMessage"
+	stateMachineType = "StateMachine"
+	sendToFunction   = "SendTo"
+	onEntryHandler   = "OnEntry"
+	onEventHandler   = "OnEvent"
+	onExitHandler    = "OnExit"
+	onMessageHandler = "OnMessage"
 )
 
 type sequenceDiagram struct {
@@ -217,7 +216,7 @@ func extractHandlerInfo(callExpr *ast.CallExpr, pkg *load.PackageInfo) (*handler
 	}
 
 	kind := selExpr.Sel.Name
-	if kind != onEntryHandler && kind != onEventHandler && kind != onExitHandler && kind != onProtobufMessageHandler {
+	if kind != onEntryHandler && kind != onEventHandler && kind != onExitHandler && kind != onMessageHandler {
 		return nil, false, nil
 	}
 
@@ -236,7 +235,7 @@ func extractHandlerInfo(callExpr *ast.CallExpr, pkg *load.PackageInfo) (*handler
 	}
 
 	var eventType string
-	if kind == onEventHandler || kind == onProtobufMessageHandler {
+	if kind == onEventHandler || kind == onMessageHandler {
 		eventType = extractEventTypeFromHandler(handlerFunc, pkg.TypesInfo)
 	}
 	handlerID := buildHandlerID(stateMachine, kind, eventType, handlerFunc, pkg)
@@ -256,7 +255,7 @@ func validateHandlerArgs(kind string, args []ast.Expr) bool {
 		return len(args) == 3
 	case onEventHandler:
 		return len(args) == 3
-	case onProtobufMessageHandler:
+	case onMessageHandler:
 		return len(args) == 4
 	default:
 		return false
@@ -305,7 +304,7 @@ func extractSendToFlow(callExpr *ast.CallExpr, pkg *load.PackageInfo, info *hand
 	if !ok {
 		return flow{}, false, nil
 	}
-	if selExpr.Sel.Name != sendToFunction && selExpr.Sel.Name != protobufSendToFunction {
+	if selExpr.Sel.Name != sendToFunction {
 		return flow{}, false, nil
 	}
 
@@ -465,7 +464,7 @@ func uniqueNextHandlers(current flow, flows []flow) []string {
 }
 
 func isEventHandler(kind string) bool {
-	return kind == onEventHandler || kind == onProtobufMessageHandler
+	return kind == onEventHandler || kind == onMessageHandler
 }
 
 func isFromGoat(sel *ast.SelectorExpr, info *types.Info) (bool, error) {
