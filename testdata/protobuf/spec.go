@@ -26,16 +26,16 @@ type ServiceState struct {
 }
 
 type Request struct {
-	protobuf.ProtobufMessage[*ClientStateMachine, *ServiceStateMachine]
+	protobuf.Message[*ClientStateMachine, *ServiceStateMachine]
 }
 
 type Response struct {
-	protobuf.ProtobufMessage[*ServiceStateMachine, *ClientStateMachine]
+	protobuf.Message[*ServiceStateMachine, *ClientStateMachine]
 }
 
 func createProtobufModel() {
 	clientSpec := goat.NewStateMachineSpec(&ClientStateMachine{})
-	serviceSpec := protobuf.NewProtobufServiceSpec(&ServiceStateMachine{})
+	serviceSpec := protobuf.NewServiceSpec(&ServiceStateMachine{})
 
 	clientState := &ClientState{}
 	serviceState := &ServiceState{}
@@ -46,12 +46,12 @@ func createProtobufModel() {
 	goat.OnEntry(clientSpec, clientState,
 		func(ctx context.Context, client *ClientStateMachine) {
 			request := &Request{}
-			protobuf.ProtobufSendTo(ctx, client.Service, request)
+			protobuf.SendTo(ctx, client.Service, request)
 		})
 
-	protobuf.OnProtobufMessage(serviceSpec, serviceState, "HandleRequest",
-		func(ctx context.Context, request *Request, service *ServiceStateMachine) protobuf.ProtobufResponse[*Response] {
+	protobuf.OnMessage(serviceSpec, serviceState, "HandleRequest",
+		func(ctx context.Context, request *Request, service *ServiceStateMachine) protobuf.Response[*Response] {
 			response := &Response{}
-			return protobuf.ProtobufSendTo(ctx, service.Client, response)
+			return protobuf.SendTo(ctx, service.Client, response)
 		})
 }
